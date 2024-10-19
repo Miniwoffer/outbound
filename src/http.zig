@@ -53,6 +53,19 @@ pub const Request = struct {
     method: []const u8,
     uri: []const u8,
     headers: std.StringHashMap([]const u8),
+
+    body: []const u8,
+};
+
+pub const Response = struct {
+    const Self = @This();
+
+    status: []const u8,
+    statu_code: u32,
+
+    headers: std.StringHashMap([]const u8),
+
+    body: []const u8,
 };
 
 pub const HTTPBuffer = struct {
@@ -152,7 +165,7 @@ pub const Connection = struct {
     }
 
 
-    pub fn receiveHead(c: *Self) !void {
+    pub fn receive(c: *Self) !Request {
         assert(c.state == .ready);
         var httpBuffer = try HTTPBuffer.init(c.arena.allocator(), 8190, c.socket);
         defer httpBuffer.deinit();
@@ -182,6 +195,7 @@ pub const Connection = struct {
             .method = method,
             .uri = uri,
             .headers = std.StringHashMap([]const u8).init(c.arena.allocator()),
+            .body = undefined,
         };
 
         // Parse all the fields in the header
@@ -211,6 +225,8 @@ pub const Connection = struct {
         //    return error.BodyTooSmall;
         //}
         log.debug("body: '{s}'", .{ body });
+        req.body = body;
+        return req; 
     }
 
     pub fn deinit(self: *Self) void {

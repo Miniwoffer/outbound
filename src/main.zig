@@ -83,7 +83,14 @@ fn apiServerAccept(server: aio.TCP, allocator: Allocator) !void {
    var con = try http.Connection.init(allocator, conn);
    defer con.deinit();
    while(true) {
-       try con.receiveHead();
+       const req = try con.receive();
+       _ = req;
+       _ = try con.socket.write(
+           .{
+               .slice = "HTTP/1.1 200 ITS FINE MY DUDE\r\nContent-Length: 0\r\n\r\n"
+           }
+       );
+       return;
    }
 }
 
